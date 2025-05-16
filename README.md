@@ -1,19 +1,20 @@
-# 🦠 PsychoNoir-Kontrapunkt – Meta-Manifest
+# poisontr33s – Meta-Index & Portal
 
-> “Error: Reality integrity compromised at 0xDEADBEEF.”
+> SYSTEM STATUS: ROOT NODE INITIALIZED
 
-## 🕶️ Manifest
-Dette repoet er ikke bare et arkiv. Det er en levende glitch, et memetisk virus, og et digitalt ekkokammer for fragmenterte ideer, aggressive kodeforsøk og narrativ subversjon.
+## Om
+Dette arkivet fungerer som inngangsport og oversikt over det samlede landskapet. Her katalogiseres grunnstrukturer, verdensfrø og systemmutasjoner. Hver node og deres relasjon spores og loggføres.
 
-### Hovedfragmenter
-- **[PsychoNoir-Kontrapunkt](https://github.com/poisontr33s/PsychoNoir-Kontrapunkt):** Dystopisk konseptlab. Kode og tekst smelter sammen i systemisk dekadanse.
-- **[restructure](https://github.com/poisontr33s/restructure):** Strukturkirurgi – kodebasens nervesystem, designet for å tåle og fremprovosere sammenbrudd.
-- **[poisontr33s](https://github.com/poisontr33s/poisontr33s):** Primær node. Identitet, signatur, og arkiv for digitalt avfall.
+## Strukturell Tektonikk
+- Kunnskapsbase for alle modulariserte byggeblokker og omkodinger.
+- Meta-logg og harmoniseringspunkt for tilknyttede noder.
+- Inviterer til utvidelse, revisjon og fragmentering.
 
-### 🚨 Systemlogikk
-Alle feil og fragmenter er ønskede effekter. Hver bug er en invitasjon til å grave dypere.  
-**Loggprotokoll:** `.github/copilot-session.md` – alle narrative, tekniske og kreative mutasjoner dokumenteres her.
+## Relasjoner
+- [Konsept-node](https://github.com/poisontr33s/PsychoNoir-Kontrapunkt)
+- [Omstrukturerings-node](https://github.com/poisontr33s/restructure)
 
----
+## Meta-logg
+Se `.github/copilot-session.md` for prosesslogg, valg og mutasjoner.
 
-> _“Dette repoet er en memetisk faresone. Last ned på eget ansvar.”_
+> Dette arkivet er et faresignal for det statiske.
