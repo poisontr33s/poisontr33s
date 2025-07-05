@@ -1,0 +1,133 @@
+name: Add Contributors
+
+on:
+  workflow_dispatch:
+    inputs:
+      contributor_type:
+        description: 'Add contributor by username or email'
+        required: true
+        default: 'username'
+        type: choice
+        options:
+          - username
+          - email
+      contributor_identifier:
+        description: 'Username or email of the contributor'
+        required: true
+        type: string
+      permission_level:
+        description: 'Permission level for the contributor'
+        required: true
+        default: 'pull'
+        type: choice
+        options:
+          - pull
+          - push
+          - admin
+          - maintain
+          - triage
+      batch_file:
+        description: 'Optional: Path to batch file with multiple contributors'
+        required: false
+        type: string
+
+jobs:
+  add-contributors:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install PyGithub
+        
+    - name: Create logs directory
+      run: mkdir -p logs
+      
+    - name: Add single contributor
+      if: ${{ !inputs.batch_file }}
+      run: |
+        if [ "${{ inputs.contributor_type }}" == "username" ]; then
+          python scripts/add_contributors.py \
+            --username "${{ inputs.contributor_identifier }}" \
+            --permission "${{ inputs.permission_level }}" \
+            --repository "${{ github.repository }}" \
+            --token "${{ secrets.GITHUB_TOKEN }}"
+        else
+          python scripts/add_contributors.py \
+            --email "${{ inputs.contributor_identifier }}" \
+            --permission "${{ inputs.permission_level }}" \
+            --repository "${{ github.repository }}" \
+            --token "${{ secrets.GITHUB_TOKEN }}"
+        fi
+        
+    - name: Add batch contributors
+      if: ${{ inputs.batch_file }}
+      run: |
+        python scripts/add_contributors.py \
+          --batch-file "${{ inputs.batch_file }}" \
+          --repository "${{ github.repository }}" \
+          --token "${{ secrets.GITHUB_TOKEN }}"
+          
+    - name: Upload logs
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: contributor-automation-logs
+        path: logs/
+        retention-days: 30
+        
+    - name: Comment on success
+      if: success()
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const identifier = '${{ inputs.contributor_identifier }}';
+          const permission = '${{ inputs.permission_level }}';
+          const type = '${{ inputs.contributor_type }}';
+          const batchFile = '${{ inputs.batch_file }}';
+          
+          let message;
+          if (batchFile) {
+            message = `✅ **Batch contributor addition completed**\n\nBatch file: \`${batchFile}\`\n\nCheck the logs for detailed results.`;
+          } else {
+            message = `✅ **Contributor successfully added**\n\n**${type === 'username' ? 'Username' : 'Email'}:** ${identifier}\n**Permission:** ${permission}`;
+          }
+          
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: message
+          });
+          
+    - name: Comment on failure
+      if: failure()
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const identifier = '${{ inputs.contributor_identifier }}';
+          const type = '${{ inputs.contributor_type }}';
+          const batchFile = '${{ inputs.batch_file }}';
+          
+          let message;
+          if (batchFile) {
+            message = `❌ **Batch contributor addition failed**\n\nBatch file: \`${batchFile}\`\n\nCheck the logs for detailed error information.`;
+          } else {
+            message = `❌ **Failed to add contributor**\n\n**${type === 'username' ? 'Username' : 'Email'}:** ${identifier}\n\nCheck the logs for detailed error information.`;
+          }
+          
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: message
+          });
