@@ -1,0 +1,52 @@
+# Core Backend
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+pydantic==2.5.0
+python-multipart==0.0.6
+
+# AI Integrations
+openai==1.3.7
+google-generativeai==0.3.2
+anthropic==0.7.8
+requests==2.31.0
+aiohttp==3.9.1
+
+# GPU/Vulkan Support
+vulkan==1.3.0
+moderngl==5.8.2
+pygame==2.5.2
+glfw==2.6.3
+
+# CUDA/ML Backend
+torch==2.1.1+cu121
+torchvision==0.16.1+cu121
+torchaudio==2.1.1+cu121
+tensorrt==8.6.1
+cupy-cuda12x==12.3.0
+numba==0.58.1
+
+# Data Processing
+numpy==1.25.2
+pandas==2.1.4
+pillow==10.1.0
+opencv-python==4.8.1.78
+
+# Async & Concurrency
+asyncio==3.4.3
+aiofiles==23.2.1
+websockets==12.0
+
+# Configuration & Environment
+python-dotenv==1.0.0
+pyyaml==6.0.1
+toml==0.10.2
+
+# Logging & Monitoring
+structlog==23.2.0
+rich==13.7.0
+psutil==5.9.6
+
+# Development
+pytest==7.4.3
+black==23.11.0
+mypy==1.7.1
