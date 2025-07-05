@@ -1,0 +1,14 @@
+[
+  {
+    "username": "example-user1",
+    "permission": "pull"
+  },
+  {
+    "username": "example-user2",
+    "permission": "push"
+  },
+  {
+    "email": "contributor@example.com",
+    "permission": "pull"
+  }
+]

@@ -1,0 +1,25 @@
+{
+  "permission_levels": {
+    "read": "pull",
+    "write": "push",
+    "admin": "admin",
+    "maintain": "maintain",
+    "triage": "triage"
+  },
+  "default_permission": "pull",
+  "logging": {
+    "level": "INFO",
+    "file": "logs/contributor-automation.log",
+    "console": true
+  },
+  "api": {
+    "timeout": 30,
+    "retry_attempts": 3,
+    "retry_delay": 2
+  },
+  "validation": {
+    "validate_username": true,
+    "validate_email": true,
+    "check_user_exists": true
+  }
+}
