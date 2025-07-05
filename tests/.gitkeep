@@ -1,0 +1,8 @@
+# Tests Directory
+
+This directory contains test files for validating automation pipelines and functionality.
+
+## Structure
+- Unit tests for scripts and automation
+- Integration tests for workflows
+- Validation tests for folder structure creation
