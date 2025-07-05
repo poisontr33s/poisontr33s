@@ -10,6 +10,7 @@ Dette arkivet fungerer som inngangsport og oversikt over det samlede landskapet.
 - Meta-logg og harmoniseringspunkt for tilknyttede noder
 - Inviterer til utvidelse, revisjon og fragmentering
 - Sikrer kontinuitet og sammenheng mellom alle tilknyttede prosjekter
+- **Post-merge validering**: Automatiserte verktøy for kvalitetssikring av sammensmelting
 
 ## Relasjoner
 - [Konsept-node](https://github.com/poisontr33s/PsychoNoir-Kontrapunkt) - Utforskning av narrative strukturer og psykologiske dybder
@@ -17,5 +18,11 @@ Dette arkivet fungerer som inngangsport og oversikt over det samlede landskapet.
 
 ## Meta-logg
 Se `.github/copilot-session.md` for prosesslogg, valg og mutasjoner.
+
+## Verktøy og Validering
+- **Post-merge validering**: `scripts/post-merge-validation.sh` - Automatisert validering av sammensmelting
+- **Branch cleanup**: `scripts/cleanup-branches.sh` - Sikker opprydding av sammensmeltte grener
+- **Dokumentasjon**: `docs/post-merge-validation.md` - Komplett guide for validering
+- **GitHub Actions**: `.github/workflows/post-merge-validation.yml` - Automatisert validering i CI/CD
 
 > Dette arkivet er et faresignal for det statiske.
