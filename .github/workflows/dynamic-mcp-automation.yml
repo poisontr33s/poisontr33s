@@ -189,7 +189,4 @@ jobs:
             body: body,
             labels: ['health-check', 'failure', 'automated']
           });
-
-  # Scheduled job for periodic health checks
-  schedule:
-    - cron: '0 */6 * * *'  # Every 6 hours
+          
