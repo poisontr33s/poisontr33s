@@ -26,10 +26,10 @@ logger = logging.getLogger(__name__)
 
 class SimpleWebHandler(BaseHTTPRequestHandler):
     """Simple HTTP handler for the meta-automata interface"""
-    
+
     def do_GET(self):
         """Handle GET requests"""
-        
+
         if self.path == '/' or self.path == '/index.html':
             self.serve_interface()
         elif self.path == '/api/status':
@@ -42,10 +42,10 @@ class SimpleWebHandler(BaseHTTPRequestHandler):
             self.serve_markdown()
         else:
             self.send_error(404)
-            
+
     def do_POST(self):
         """Handle POST requests"""
-        
+
         if self.path == '/api/config':
             content_length = int(self.headers['Content-Length'])
             post_data = self.rfile.read(content_length)
@@ -57,10 +57,10 @@ class SimpleWebHandler(BaseHTTPRequestHandler):
                 self.send_error(400)
         else:
             self.send_error(404)
-            
+
     def serve_interface(self):
         """Serve the main interface"""
-        
+
         html = '''<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -200,13 +200,13 @@ class SimpleWebHandler(BaseHTTPRequestHandler):
             <h1>🧠 Meta-Automata Foundation System</h1>
             <p>Recursive AI Learning & Adaptation Engine - Foundation Layer</p>
         </div>
-        
+
         <div class="foundation-info">
             <h3>🔬 Foundation Status</h3>
-            <p>The Meta-Automata system has been successfully bootstrapped from the original repository structure. 
+            <p>The Meta-Automata system has been successfully bootstrapped from the original repository structure.
             The foundation layer is operational and ready for AI integration and Vulkan acceleration.</p>
         </div>
-        
+
         <div class="grid">
             <div class="panel">
                 <h3>⚡ System Foundation</h3>
@@ -227,7 +227,7 @@ class SimpleWebHandler(BaseHTTPRequestHandler):
                     <span><span class="status-indicator status-active"></span><span class="metric-value">Preserved</span></span>
                 </div>
             </div>
-            
+
             <div class="panel">
                 <h3>🔮 AI Integration Status</h3>
                 <div class="metrics">
@@ -247,7 +247,7 @@ class SimpleWebHandler(BaseHTTPRequestHandler):
                     <span class="metric-value">Multi-AI Fusion</span>
                 </div>
             </div>
-            
+
             <div class="panel">
                 <h3>🎮 GPU Acceleration</h3>
                 <div class="metrics">
@@ -267,7 +267,7 @@ class SimpleWebHandler(BaseHTTPRequestHandler):
                     <span class="metric-value">24GB VRAM + 64GB RAM</span>
                 </div>
             </div>
-            
+
             <div class="panel">
                 <h3>🧬 Learning Engine</h3>
                 <div class="metrics">
@@ -288,14 +288,14 @@ class SimpleWebHandler(BaseHTTPRequestHandler):
                 </div>
             </div>
         </div>
-        
+
         <div class="original-docs">
             <h3>📚 Original Repository Documentation (Preserved)</h3>
             <a href="/README.md" class="docs-link">README.md</a>
             <a href="/migration_guide.md" class="docs-link">migration_guide.md</a>
             <a href="/.github/copilot-instructions.md" class="docs-link">Copilot Instructions</a>
         </div>
-        
+
         <div class="panel">
             <h3>💻 Foundation Console</h3>
             <div class="console" id="console">
@@ -314,10 +314,10 @@ class SimpleWebHandler(BaseHTTPRequestHandler):
             </div>
         </div>
     </div>
-    
+
     <script>
         let consoleElement = document.getElementById('console');
-        
+
         function logToConsole(message, color = '#00ff88') {
             const timestamp = new Date().toLocaleTimeString();
             const div = document.createElement('div');
@@ -326,31 +326,31 @@ class SimpleWebHandler(BaseHTTPRequestHandler):
             consoleElement.appendChild(div);
             consoleElement.scrollTop = consoleElement.scrollHeight;
         }
-        
+
         function installDeps() {
             logToConsole('[INSTALL] Installing Python dependencies...', '#ffaa00');
             logToConsole('[NOTE] Run: pip install -r requirements.txt', '#00ffff');
             logToConsole('[NOTE] Includes: FastAPI, Vulkan, CUDA, AI SDKs', '#ffffff');
         }
-        
+
         function configureAI() {
             logToConsole('[CONFIG] Copy .env.template to .env', '#ffaa00');
             logToConsole('[CONFIG] Add your API keys for AI services', '#00ffff');
             logToConsole('[CONFIG] Gemini, OpenAI, GitHub, Microsoft Copilot', '#ffffff');
         }
-        
+
         function activateVulkan() {
             logToConsole('[VULKAN] Checking GPU compatibility...', '#ffaa00');
             logToConsole('[GPU] RTX 4090 detected - 24GB VRAM available', '#00ff88');
             logToConsole('[VULKAN] High-performance rendering ready', '#00ffff');
         }
-        
+
         function startLearning() {
             logToConsole('[LEARNING] Initializing recursive learning engine...', '#ffaa00');
             logToConsole('[META] Bidirectional pattern recognition active', '#00ff88');
             logToConsole('[ADAPT] Continuous adaptation and evolution enabled', '#00ffff');
         }
-        
+
         // Auto-status updates
         setInterval(() => {
             const messages = [
@@ -363,27 +363,27 @@ class SimpleWebHandler(BaseHTTPRequestHandler):
             const color = colors[Math.floor(Math.random() * colors.length)];
             logToConsole(msg, color);
         }, 10000);
-        
+
     </script>
 </body>
 </html>'''
-        
+
         self.send_response(200)
         self.send_header('Content-Type', 'text/html')
         self.end_headers()
         self.wfile.write(html.encode())
-        
+
     def serve_json(self, data):
         """Serve JSON response"""
-        
+
         self.send_response(200)
         self.send_header('Content-Type', 'application/json')
         self.end_headers()
         self.wfile.write(json.dumps(data).encode())
-        
+
     def serve_static(self):
         """Serve static files"""
-        
+
         file_path = self.path[8:]  # Remove '/static/'
         try:
             with open(f'static/{file_path}', 'rb') as f:
@@ -394,15 +394,15 @@ class SimpleWebHandler(BaseHTTPRequestHandler):
                 self.wfile.write(content)
         except:
             self.send_error(404)
-            
+
     def serve_markdown(self):
         """Serve markdown files from the original repository"""
-        
+
         file_path = self.path[1:]  # Remove leading '/'
         try:
             with open(file_path, 'r', encoding='utf-8') as f:
                 content = f.read()
-                
+
             # Simple markdown to HTML conversion
             html = f'''<!DOCTYPE html>
 <html>
@@ -421,17 +421,17 @@ class SimpleWebHandler(BaseHTTPRequestHandler):
     <pre>{content}</pre>
 </body>
 </html>'''
-            
+
             self.send_response(200)
             self.send_header('Content-Type', 'text/html')
             self.end_headers()
             self.wfile.write(html.encode())
         except:
             self.send_error(404)
-            
+
     def get_status(self):
         """Get system status"""
-        
+
         return {
             "timestamp": time.time(),
             "foundation_active": True,
@@ -441,10 +441,10 @@ class SimpleWebHandler(BaseHTTPRequestHandler):
             "vulkan_ready": True,
             "learning_active": True
         }
-        
+
     def get_metrics(self):
         """Get system metrics"""
-        
+
         return {
             "foundation_health": 100,
             "uptime": time.time(),
@@ -453,10 +453,10 @@ class SimpleWebHandler(BaseHTTPRequestHandler):
             "ready_for_ai": True,
             "ready_for_vulkan": True
         }
-        
+
     def update_config(self, data):
         """Update configuration"""
-        
+
         return {
             "status": "success",
             "message": "Foundation layer configuration updated"
@@ -464,25 +464,25 @@ class SimpleWebHandler(BaseHTTPRequestHandler):
 
 class FoundationSystem:
     """Simplified foundation system for initial setup"""
-    
+
     def __init__(self):
-        self.port = 3000
+        self.port = 8000
         self.server = None
-        
+
     def start(self):
         """Start the foundation system"""
-        
+
         logger.info("Starting Meta-Automata Foundation System...")
         logger.info(f"Original structure preserved and enhanced")
         logger.info(f"Ready for AI integration and Vulkan acceleration")
-        
+
         # Start web server
         server_address = ('', self.port)
         self.server = HTTPServer(server_address, SimpleWebHandler)
-        
+
         logger.info(f"Foundation interface available at http://localhost:{self.port}")
         logger.info("Foundation layer operational - awaiting full system activation")
-        
+
         try:
             self.server.serve_forever()
         except KeyboardInterrupt:
@@ -491,12 +491,12 @@ class FoundationSystem:
 
 def main():
     """Main entry point"""
-    
+
     # Ensure Python 3.13+ compatibility (simplified check)
     if sys.version_info < (3, 8):
         print("Python 3.8+ required (3.13+ recommended)")
         sys.exit(1)
-        
+
     # Start foundation system
     foundation = FoundationSystem()
     foundation.start()
