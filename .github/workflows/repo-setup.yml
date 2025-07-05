@@ -1,0 +1,269 @@
+name: Repository Setup and Validation
+
+on:
+  workflow_dispatch:
+    inputs:
+      setup_structure:
+        description: 'Setup repository structure'
+        required: false
+        default: 'true'
+        type: boolean
+      validate_structure:
+        description: 'Validate repository structure'
+        required: false
+        default: 'true'
+        type: boolean
+      verbose_output:
+        description: 'Enable verbose output'
+        required: false
+        default: 'false'
+        type: boolean
+  push:
+    branches:
+      - main
+    paths:
+      - 'scripts/**'
+      - 'tests/**'
+      - '.github/workflows/repo-setup.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'scripts/**'
+      - 'tests/**'
+      - '.github/workflows/repo-setup.yml'
+
+jobs:
+  setup:
+    name: Setup Repository Structure
+    runs-on: ubuntu-latest
+    if: github.event.inputs.setup_structure != 'false'
+    
+    permissions:
+      contents: write
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Setup repository structure
+        run: |
+          echo "Setting up repository structure..."
+          
+          # Make setup script executable
+          chmod +x scripts/setup-repo-structure.sh
+          
+          # Run setup script
+          if [[ "${{ github.event.inputs.verbose_output }}" == "true" ]]; then
+            ./scripts/setup-repo-structure.sh --verbose
+          else
+            ./scripts/setup-repo-structure.sh
+          fi
+      
+      - name: Commit structure changes
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          
+          # Add any new directories or files
+          git add .
+          
+          # Check if there are changes to commit
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: setup repository structure via GitHub Actions"
+            git push
+          else
+            echo "No changes to commit"
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  validate:
+    name: Validate Repository Structure
+    runs-on: ubuntu-latest
+    needs: setup
+    if: always() && github.event.inputs.validate_structure != 'false'
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Validate repository structure
+        run: |
+          echo "Validating repository structure..."
+          
+          # Make validation script executable
+          chmod +x tests/validate-repo-structure.sh
+          
+          # Run validation script
+          if [[ "${{ github.event.inputs.verbose_output }}" == "true" ]]; then
+            ./tests/validate-repo-structure.sh --verbose
+          else
+            ./tests/validate-repo-structure.sh
+          fi
+      
+      - name: Upload validation report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: validation-report
+          path: |
+            validation-report.txt
+            test-results.xml
+          retention-days: 30
+          if-no-files-found: ignore
+
+  test-scripts:
+    name: Test Automation Scripts
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        test-scenario:
+          - fresh-setup
+          - existing-structure
+          - dry-run
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Test setup script - ${{ matrix.test-scenario }}
+        run: |
+          echo "Testing setup script with scenario: ${{ matrix.test-scenario }}"
+          
+          # Make scripts executable
+          chmod +x scripts/setup-repo-structure.sh
+          chmod +x tests/validate-repo-structure.sh
+          
+          case "${{ matrix.test-scenario }}" in
+            "fresh-setup")
+              # Test fresh setup
+              ./scripts/setup-repo-structure.sh --verbose
+              ;;
+            "existing-structure")
+              # Create some directories first
+              mkdir -p docs assets
+              ./scripts/setup-repo-structure.sh --verbose
+              ;;
+            "dry-run")
+              # Test dry run
+              ./scripts/setup-repo-structure.sh --dry-run --verbose
+              ;;
+          esac
+      
+      - name: Validate after setup
+        run: |
+          if [[ "${{ matrix.test-scenario }}" != "dry-run" ]]; then
+            ./tests/validate-repo-structure.sh --verbose
+          fi
+
+  security-check:
+    name: Security Check
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Check script permissions
+        run: |
+          echo "Checking script permissions..."
+          
+          # Verify scripts are not world-writable
+          find scripts/ -type f -name "*.sh" -perm -002 -exec echo "Warning: {} is world-writable" \; -exec exit 1 \;
+          find tests/ -type f -name "*.sh" -perm -002 -exec echo "Warning: {} is world-writable" \; -exec exit 1 \;
+          
+          echo "Script permissions OK"
+      
+      - name: Shellcheck analysis
+        run: |
+          # Install shellcheck
+          sudo apt-get update
+          sudo apt-get install -y shellcheck
+          
+          echo "Running shellcheck on shell scripts..."
+          
+          # Check all shell scripts
+          find scripts/ tests/ -name "*.sh" -type f -exec shellcheck {} \;
+          
+          echo "Shellcheck analysis completed"
+
+  documentation:
+    name: Generate Documentation
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Generate script documentation
+        run: |
+          echo "Generating documentation..."
+          
+          # Create documentation directory
+          mkdir -p docs/scripts
+          
+          # Generate help output for scripts
+          chmod +x scripts/setup-repo-structure.sh
+          chmod +x tests/validate-repo-structure.sh
+          
+          echo "# Script Documentation" > docs/scripts/README.md
+          echo "" >> docs/scripts/README.md
+          echo "## Setup Script" >> docs/scripts/README.md
+          echo "" >> docs/scripts/README.md
+          echo "\`\`\`" >> docs/scripts/README.md
+          ./scripts/setup-repo-structure.sh --help >> docs/scripts/README.md
+          echo "\`\`\`" >> docs/scripts/README.md
+          echo "" >> docs/scripts/README.md
+          echo "## Validation Script" >> docs/scripts/README.md
+          echo "" >> docs/scripts/README.md
+          echo "\`\`\`" >> docs/scripts/README.md
+          ./tests/validate-repo-structure.sh --help >> docs/scripts/README.md
+          echo "\`\`\`" >> docs/scripts/README.md
+      
+      - name: Commit documentation
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          
+          git add docs/scripts/README.md
+          
+          if ! git diff --cached --quiet; then
+            git commit -m "docs: update script documentation"
+            git push
+          else
+            echo "No documentation changes to commit"
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  summary:
+    name: Workflow Summary
+    runs-on: ubuntu-latest
+    needs: [setup, validate, test-scripts, security-check]
+    if: always()
+    
+    steps:
+      - name: Generate summary
+        run: |
+          echo "# Repository Setup and Validation Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Job Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- Setup: ${{ needs.setup.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Validation: ${{ needs.validate.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Script Tests: ${{ needs.test-scripts.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Security Check: ${{ needs.security-check.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Workflow Configuration" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- Setup Structure: ${{ github.event.inputs.setup_structure || 'true' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Validate Structure: ${{ github.event.inputs.validate_structure || 'true' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Verbose Output: ${{ github.event.inputs.verbose_output || 'false' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Trigger: ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
