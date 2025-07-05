@@ -1,0 +1,194 @@
+name: Dynamic MCP Server Automation
+
+on:
+  issues:
+    types: [opened, edited, reopened, closed]
+  pull_request:
+    types: [opened, edited, reopened, closed, ready_for_review]
+  push:
+    branches: ["main", "master", "dev", "develop"]
+  pull_request_review:
+    types: [submitted]
+  commit_comment:
+    types: [created]
+  workflow_run:
+    types: [completed]
+  repository_dispatch:
+    types: [manual_trigger]
+
+jobs:
+  dynamic-mcp-processing:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        
+    - name: Set up environment variables
+      run: |
+        echo "GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}" >> $GITHUB_ENV
+        echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}" >> $GITHUB_ENV
+        echo "GITHUB_WEBHOOK_SECRET=${{ secrets.GITHUB_WEBHOOK_SECRET }}" >> $GITHUB_ENV
+        
+    - name: Initialize Dynamic MCP System
+      run: |
+        mkdir -p logs
+        mkdir -p vector_store
+        
+    - name: Process GitHub Event
+      run: |
+        python -m src.dynamic_mcp.scripts.process_github_event \
+          --event-type "${{ github.event_name }}" \
+          --event-data "${{ toJson(github.event) }}" \
+          --repository "${{ github.repository }}" \
+          --ref "${{ github.ref }}" \
+          --sha "${{ github.sha }}"
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        
+    - name: Upload processing logs
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: processing-logs
+        path: logs/
+        
+    - name: Comment on Issue/PR (if applicable)
+      if: github.event_name == 'issues' || github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          const path = './logs/processing_result.json';
+          
+          if (fs.existsSync(path)) {
+            const result = JSON.parse(fs.readFileSync(path, 'utf8'));
+            
+            if (result.success && result.response && result.response.response) {
+              const body = `## 🤖 Dynamic MCP Analysis\n\n${result.response.response}\n\n---\n*Processed by Dynamic MCP Server in ${result.processing_time.toFixed(2)}s*`;
+              
+              if (context.eventName === 'issues') {
+                await github.rest.issues.createComment({
+                  issue_number: context.issue.number,
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  body: body
+                });
+              } else if (context.eventName === 'pull_request') {
+                await github.rest.pulls.createReview({
+                  pull_number: context.issue.number,
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  body: body,
+                  event: 'COMMENT'
+                });
+              }
+            }
+          }
+
+  deploy-analysis:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+    needs: [dynamic-mcp-processing]
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        
+    - name: Analyze deployment readiness
+      run: |
+        python -m src.dynamic_mcp.scripts.analyze_deployment \
+          --repository "${{ github.repository }}" \
+          --ref "${{ github.ref }}" \
+          --sha "${{ github.sha }}"
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        
+    - name: Create deployment issue (if needed)
+      if: failure()
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const title = '🚨 Deployment Analysis Failed';
+          const body = `Deployment analysis failed for commit ${context.sha}.\n\nPlease check the workflow logs for details.`;
+          
+          await github.rest.issues.create({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            title: title,
+            body: body,
+            labels: ['deployment', 'failure', 'automated']
+          });
+
+  scheduled-health-check:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule'
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        
+    - name: Health check MCP servers
+      run: |
+        python -m src.dynamic_mcp.scripts.health_check \
+          --config config/system_config.yaml \
+          --output logs/health_check.json
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        
+    - name: Upload health check results
+      uses: actions/upload-artifact@v3
+      with:
+        name: health-check-results
+        path: logs/health_check.json
+        
+    - name: Create health check issue (if needed)
+      if: failure()
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const title = '🚨 MCP Server Health Check Failed';
+          const body = `Scheduled health check failed.\n\nPlease check the system status and server configurations.`;
+          
+          await github.rest.issues.create({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            title: title,
+            body: body,
+            labels: ['health-check', 'failure', 'automated']
+          });
+
+  # Scheduled job for periodic health checks
+  schedule:
+    - cron: '0 */6 * * *'  # Every 6 hours

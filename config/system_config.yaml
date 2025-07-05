@@ -1,0 +1,192 @@
+# Dynamic MCP Server Configuration
+
+# Server configurations
+servers:
+  - name: "code-analysis-server"
+    endpoint: "http://localhost:8001"
+    capabilities:
+      - "code_analysis"
+      - "testing"
+      - "security"
+    priority: 8
+    enabled: true
+    timeout: 30
+    retry_count: 3
+    health_check_interval: 60
+    tags:
+      - "development"
+      - "quality"
+      - "analysis"
+    auth_config:
+      type: "api_key"
+      header: "X-API-Key"
+      api_key: "${CODE_ANALYSIS_API_KEY}"
+
+  - name: "documentation-server"
+    endpoint: "http://localhost:8002"
+    capabilities:
+      - "documentation"
+      - "ai_inference"
+    priority: 6
+    enabled: true
+    timeout: 30
+    retry_count: 3
+    health_check_interval: 60
+    tags:
+      - "documentation"
+      - "help"
+      - "ai"
+
+  - name: "deployment-server"
+    endpoint: "http://localhost:8003"
+    capabilities:
+      - "deployment"
+      - "monitoring"
+      - "workflow_automation"
+    priority: 7
+    enabled: true
+    timeout: 45
+    retry_count: 2
+    health_check_interval: 30
+    tags:
+      - "deployment"
+      - "ops"
+      - "automation"
+
+  - name: "integration-server"
+    endpoint: "http://localhost:8004"
+    capabilities:
+      - "integration"
+      - "data_processing"
+    priority: 5
+    enabled: true
+    timeout: 30
+    retry_count: 3
+    health_check_interval: 60
+    tags:
+      - "integration"
+      - "data"
+
+# Routing rules
+routing_rules:
+  - name: "issue-code-analysis"
+    trigger_types:
+      - "issue"
+    conditions:
+      keywords:
+        - "bug"
+        - "error"
+        - "fix"
+        - "code"
+        - "broken"
+        - "failing"
+    target_servers:
+      - "code-analysis-server"
+    priority: 9
+    enabled: true
+
+  - name: "issue-documentation"
+    trigger_types:
+      - "issue"
+    conditions:
+      keywords:
+        - "doc"
+        - "documentation"
+        - "guide"
+        - "help"
+        - "readme"
+        - "tutorial"
+    target_servers:
+      - "documentation-server"
+    priority: 7
+    enabled: true
+
+  - name: "pr-code-review"
+    trigger_types:
+      - "pull_request"
+    conditions: {}
+    target_servers:
+      - "code-analysis-server"
+    priority: 9
+    enabled: true
+
+  - name: "push-main-deploy"
+    trigger_types:
+      - "push"
+    conditions:
+      branch: "^(main|master)$"
+    target_servers:
+      - "deployment-server"
+      - "code-analysis-server"
+    priority: 8
+    enabled: true
+
+  - name: "push-dev-analysis"
+    trigger_types:
+      - "push"
+    conditions:
+      branch: "^(dev|develop|feature/.*|fix/.*)$"
+    target_servers:
+      - "code-analysis-server"
+    priority: 6
+    enabled: true
+
+  - name: "user-prompt-general"
+    trigger_types:
+      - "user_prompt"
+      - "query"
+    conditions: {}
+    target_servers:
+      - "code-analysis-server"
+      - "documentation-server"
+    priority: 5
+    enabled: true
+
+  - name: "meta-prompt-advanced"
+    trigger_types:
+      - "meta_prompt"
+    conditions: {}
+    target_servers:
+      - "code-analysis-server"
+      - "documentation-server"
+      - "integration-server"
+    priority: 8
+    enabled: true
+
+  - name: "deployment-workflow"
+    trigger_types:
+      - "push"
+      - "pull_request"
+    conditions:
+      keywords:
+        - "deploy"
+        - "release"
+        - "production"
+        - "staging"
+    target_servers:
+      - "deployment-server"
+    priority: 8
+    enabled: true
+
+# RAG/CAG Configuration
+rag_config:
+  embedding_model: "sentence-transformers/all-MiniLM-L6-v2"
+  vector_store_path: "./vector_store"
+  chunk_size: 1000
+  chunk_overlap: 200
+  top_k: 5
+  similarity_threshold: 0.7
+  enable_reranking: true
+  max_context_length: 4000
+
+# GitHub Integration
+github_webhook_secret: "${GITHUB_WEBHOOK_SECRET}"
+github_token: "${GITHUB_TOKEN}"
+
+# AI Integration
+openai_api_key: "${OPENAI_API_KEY}"
+
+# System Configuration
+log_level: "INFO"
+max_concurrent_requests: 10
+request_timeout: 60
