@@ -1,0 +1,8 @@
+# Scripts Directory
+
+This directory contains automation scripts and utilities.
+
+## Structure
+- setup-repo-structure.sh: Repository initialization script
+- Migration and setup utilities
+- CI/CD helper scripts

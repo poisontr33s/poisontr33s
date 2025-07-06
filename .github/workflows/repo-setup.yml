@@ -1,0 +1,165 @@
+name: Repository Structure Setup
+
+on:
+  workflow_dispatch:
+    inputs:
+      force_setup:
+        description: 'Force setup even if structure exists'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'true'
+          - 'false'
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/repo-setup.yml'
+      - 'scripts/setup-repo-structure.sh'
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  setup-repository-structure:
+    runs-on: ubuntu-latest
+    name: Create Standardized Repository Structure
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Set up Git configuration
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          
+      - name: Check if setup is needed
+        id: check_setup
+        run: |
+          NEEDS_SETUP="false"
+          
+          # Check if folders exist
+          if [ ! -d "docs" ] || [ ! -d "assets" ] || [ ! -d "scripts" ] || [ ! -d "src" ] || [ ! -d "tests" ]; then
+            NEEDS_SETUP="true"
+            echo "📁 Missing folder structure detected"
+          fi
+          
+          # Check if migration guide exists in docs
+          if [ ! -f "docs/migration_guide.md" ]; then
+            NEEDS_SETUP="true"
+            echo "📋 Migration guide missing from docs/"
+          fi
+          
+          # Force setup if requested
+          if [ "${{ github.event.inputs.force_setup }}" == "true" ]; then
+            NEEDS_SETUP="true"
+            echo "🔄 Force setup requested"
+          fi
+          
+          echo "needs_setup=$NEEDS_SETUP" >> $GITHUB_OUTPUT
+          echo "Setup needed: $NEEDS_SETUP"
+          
+      - name: Run repository structure setup
+        if: steps.check_setup.outputs.needs_setup == 'true'
+        run: |
+          echo "🚀 Setting up repository structure..."
+          
+          # Make script executable
+          chmod +x scripts/setup-repo-structure.sh
+          
+          # Run setup script
+          ./scripts/setup-repo-structure.sh
+          
+      - name: Move existing migration_guide.md if needed
+        if: steps.check_setup.outputs.needs_setup == 'true'
+        run: |
+          # Check if migration_guide.md exists in root and move it to docs/
+          if [ -f "migration_guide.md" ] && [ ! -f "docs/migration_guide.md" ]; then
+            echo "📂 Moving existing migration_guide.md to docs/"
+            mv migration_guide.md docs/
+          elif [ -f "migration_guide.md" ] && [ -f "docs/migration_guide.md" ]; then
+            echo "⚠️  Both root and docs/migration_guide.md exist. Backing up root version."
+            mv migration_guide.md docs/migration_guide_backup_$(date +%Y%m%d_%H%M%S).md
+          fi
+          
+      - name: Verify structure creation
+        if: steps.check_setup.outputs.needs_setup == 'true'
+        run: |
+          echo "🔍 Verifying repository structure..."
+          
+          REQUIRED_FOLDERS=("docs" "assets" "scripts" "src" "tests")
+          
+          for folder in "${REQUIRED_FOLDERS[@]}"; do
+            if [ -d "$folder" ]; then
+              echo "  ✅ $folder/ exists"
+            else
+              echo "  ❌ $folder/ missing"
+              exit 1
+            fi
+          done
+          
+          if [ -f "docs/migration_guide.md" ]; then
+            echo "  ✅ docs/migration_guide.md exists"
+          else
+            echo "  ❌ docs/migration_guide.md missing"
+            exit 1
+          fi
+          
+          echo "✅ Repository structure verification complete!"
+          
+      - name: Commit changes
+        if: steps.check_setup.outputs.needs_setup == 'true'
+        run: |
+          # Check if there are changes to commit
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "📝 Committing repository structure changes..."
+            git add .
+            git commit -m "🏗️ Set up standardized repository structure
+
+            - Created folder structure: docs/, assets/, scripts/, src/, tests/
+            - Moved migration_guide.md to docs/ directory
+            - Added .gitkeep files with directory documentation
+            - Applied repository best practices structure"
+            
+            echo "📤 Pushing changes..."
+            git push
+            
+            echo "✅ Repository structure setup complete and committed!"
+          else
+            echo "ℹ️  No changes to commit - structure already exists"
+          fi
+          
+      - name: Create summary
+        if: steps.check_setup.outputs.needs_setup == 'true'
+        run: |
+          echo "## 🏗️ Repository Structure Setup Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📁 Created Folder Structure:" >> $GITHUB_STEP_SUMMARY
+          echo "- 📚 \`docs/\` - Documentation and guides" >> $GITHUB_STEP_SUMMARY
+          echo "- 🖼️ \`assets/\` - Images and resources" >> $GITHUB_STEP_SUMMARY
+          echo "- 🔧 \`scripts/\` - Automation scripts" >> $GITHUB_STEP_SUMMARY
+          echo "- 💻 \`src/\` - Source code" >> $GITHUB_STEP_SUMMARY
+          echo "- 🧪 \`tests/\` - Test files" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📋 Documentation:" >> $GITHUB_STEP_SUMMARY
+          echo "- Migration guide available at \`docs/migration_guide.md\`" >> $GITHUB_STEP_SUMMARY
+          echo "- Each folder includes documentation via \`.gitkeep\` files" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🚀 Next Steps:" >> $GITHUB_STEP_SUMMARY
+          echo "1. Customize \`docs/migration_guide.md\` for your project" >> $GITHUB_STEP_SUMMARY
+          echo "2. Add project assets to \`assets/\`" >> $GITHUB_STEP_SUMMARY
+          echo "3. Implement source code in \`src/\`" >> $GITHUB_STEP_SUMMARY
+          echo "4. Create tests in \`tests/\`" >> $GITHUB_STEP_SUMMARY
+          
+      - name: Setup skipped notification
+        if: steps.check_setup.outputs.needs_setup == 'false'
+        run: |
+          echo "## ℹ️ Repository Structure Already Exists" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "The repository already has the required folder structure." >> $GITHUB_STEP_SUMMARY
+          echo "To force setup, manually trigger this workflow with 'Force setup' enabled." >> $GITHUB_STEP_SUMMARY
