@@ -133,6 +133,6 @@ name: artifact-name-${{ matrix.variable1 }}-${{ matrix.variable2 }}
 
 ---
 
-**Last Updated**: $(date)
+**Last Updated**: 2023-10-05
 **Standard Version**: 1.0
 **Applies to**: All workflows in `poisontr33s/poisontr33s` repository
