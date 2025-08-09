@@ -1,0 +1,20 @@
+---
+name: Branch naming policy
+"on":
+  pull_request:
+    types: [opened, reopened, synchronize, edited]
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Enforce branch naming
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pattern =
+              /^(feature|bugfix|hotfix|chore|release)\/[-a-z0-9._]+$/;
+            const head = context.payload.pull_request.head.ref;
+            if (!pattern.test(head)) {
+              core.setFailed(`Branch '${head}' violates naming policy. ` +
+                `Use feature|bugfix|hotfix|chore|release/<slug>`);
+            }
