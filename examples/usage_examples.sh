@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Example usage of GitHub Contributor Automation
 # This script demonstrates how to use the automation system

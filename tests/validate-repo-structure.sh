@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Repository Structure Validation Test
 # Tests the automated folder structure setup functionality

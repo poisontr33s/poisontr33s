@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # GitHub Contributor Automation - Shell Wrapper
 # This script provides a simplified interface for adding contributors

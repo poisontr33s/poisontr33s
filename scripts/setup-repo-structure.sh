@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Repository Structure Setup Script
 # Creates standardized folder structure for GitHub repositories
