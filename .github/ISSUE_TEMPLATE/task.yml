@@ -1,0 +1,40 @@
+---
+name: Task
+description: Operativ oppgave (branch-familier, hygiene, CI, docs, features)
+title: "[Task] <kort beskrivelse>"
+labels: ["status:intake"]
+body:
+  - type: dropdown
+    id: type
+    attributes:
+      label: Type
+      options:
+        - type:feature
+        - type:bug
+        - type:chore
+        - type:doc
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Prioritet
+      options:
+        - priority:p0
+        - priority:p1
+        - priority:p2
+  - type: input
+    id: family
+    attributes:
+      label: Branch family (prefiks)
+      placeholder: "skyskraperen / rustbeltet / orchestration / etc."
+  - type: textarea
+    id: what
+    attributes:
+      label: Hva og hvorfor
+  - type: textarea
+    id: done
+    attributes:
+      label: Definition of Done
+  - type: textarea
+    id: links
+    attributes:
+      label: Lenker (PRer, branches, artefakter)
